@@ -1,22 +1,22 @@
+using System.Data;
+
 namespace CalculadoraBasica
 {
     public partial class Form1 : Form
     {
         //Declaracion de variables
         private bool nuevaEntrada = false;
-        double operando1 = 0;
-        double operando2 = 0;
-        string operador = "";
         bool error = false;
+        private bool resultadoMostrado = false; 
 
         public Form1()
         {
             InitializeComponent();
             TboxPantalla.Text = "0"; //Para que aparezca 0 por defecto
             TboxPantalla.ReadOnly = true; // No editable
-            TboxPantalla.Font = new Font("Segoe UI", 14); // Tamaño 14
+            TboxPantalla.Font = new Font("Segoe UI", 12); // Tamaño 14
             TboxPantalla.TextAlign = HorizontalAlignment.Right; // Opcional: alinear a la derecha
-
+            TboxPantalla.ScrollBars = ScrollBars.None;
             this.KeyPreview = true; //Permite capturar teclas
             this.KeyDown += teclas_Accion;
         }
@@ -25,22 +25,20 @@ namespace CalculadoraBasica
         private void BtnBorrar_Click(object sender, EventArgs e)
         {
 
-            // Si estamos en nuevaEntrada} dejamos 0
-            if (nuevaEntrada)
+            if (error)
             {
-                TboxPantalla.Text = "0";
-                nuevaEntrada = true;
+                MostrarError();
                 return;
             }
 
-            if (TboxPantalla.Text.Length > 1) //Si el texto es mayor a 1 se borra una posicion 
-            {
+            if (TboxPantalla.Text.Length > 1)
                 TboxPantalla.Text = TboxPantalla.Text.Substring(0, TboxPantalla.Text.Length - 1);
-            }
             else
-            {
-                TboxPantalla.Text = "0"; //Sino se pone en 0 automticamente
-            }
+                TboxPantalla.Text = "0";
+
+            //Mantener el curso a la derecha. 
+            TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+            TboxPantalla.SelectionLength = 0;
         }
 
         //Metodo para la funcion de seleccionar el operador 
@@ -48,19 +46,27 @@ namespace CalculadoraBasica
         {
             try
             {
-                operando1 = double.Parse(TboxPantalla.Text);
-                operador = op;
+                string texto = TboxPantalla.Text;
 
-                //Mostrar el operador en TextBox
-                switch (op)
+                if (texto.EndsWith("+") || texto.EndsWith("-") || texto.EndsWith("×") || texto.EndsWith("÷"))
                 {
-                    case "+": TboxPantalla.Text = operando1 + " +"; break;
-                    case "-": TboxPantalla.Text = operando1 + " -"; break;
-                    case "*": TboxPantalla.Text = operando1 + " ×"; break;
-                    case "/": TboxPantalla.Text = operando1 + " ÷"; break;
+                    TboxPantalla.Text = texto.Substring(0, texto.Length - 1) + SimboloOperador(op);
+                    return;
                 }
 
-                nuevaEntrada = false; 
+                if (texto.Contains("="))
+                {
+                    // Si ya hay resultado, tomar solo la línea del resultado
+                    string[] lineas = texto.Split('\n');
+                    TboxPantalla.Text = lineas.Last().Replace("= ", "").Trim();
+                }
+
+                TboxPantalla.Text += SimboloOperador(op);
+                nuevaEntrada = false;
+
+                //Mantener el curso a la derecha. 
+                TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+                TboxPantalla.SelectionLength = 0;
             }
             catch
             {
@@ -83,6 +89,11 @@ namespace CalculadoraBasica
             //Se limpia todo
             TboxPantalla.Text = "0";
             nuevaEntrada = false;
+            error = false;
+
+            //Mantener el curso a la derecha. 
+            TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+            TboxPantalla.SelectionLength = 0;
         }
 
         // Boton de operador de divsion 
@@ -119,87 +130,129 @@ namespace CalculadoraBasica
         {
             try
             {
-                // Extraer la parte después del operador (el segundo número)
-                string[] partes = TboxPantalla.Text.Split(new char[] { '+', '-', '×', '÷' },
-                    StringSplitOptions.RemoveEmptyEntries);
-
-                if (partes.Length < 2)
+                // Si ya hay resultado mostrado, no re-evaluar
+                if (resultadoMostrado)
                 {
-                    return; // no hay operación completa
+                    // Simplemente mantener el resultado actual
+                    return;
                 }
 
-                operando1 = double.Parse(partes[0].Trim());
-                operando2 = double.Parse(partes[1].Trim());
+                string expresion = TboxPantalla.Text
+                    .Replace("×", "*")
+                    .Replace("÷", "/")
+                    .Replace("\r", "")
+                    .Replace("\n", "")
+                    .Trim();
 
-                double resultado = 0;
+                if (expresion.EndsWith("+") || expresion.EndsWith("-") ||
+                    expresion.EndsWith("*") || expresion.EndsWith("/"))
+                    return;
 
-                switch (operador)
+                DataTable dt = new DataTable();
+                var resultado = dt.Compute(expresion, "");
+
+                // Convertimos el resultado a double para validaciones
+                double valor = Convert.ToDouble(resultado);
+
+                // Validamos que no sea infinito ni NaN
+                if (double.IsInfinity(valor) || double.IsNaN(valor))
                 {
-                    case "+": resultado = operando1 + operando2;
-                        resultado = Math.Round(resultado, 3); break; //Suma 
-                    case "-": resultado = operando1 - operando2;
-                        resultado = Math.Round(resultado, 3); break; //Resta
-                    case "*": resultado = operando1 * operando2;
-                        resultado = Math.Round(resultado, 3); break; //Multiplicacion
-                    case "/":  //Division 
-                        if (operando2 == 0)  // Verificando el divissor no sea 0 
-                        {
-                            MostrarError("División por cero");
-                            return;
-                        }
-                        resultado = operando1 / operando2;
-                        resultado = Math.Round(resultado, 3); //Reduciendo la divison a 3 decimales
-                        break;
+                    MostrarError("Operación inválida"); // Mostramos error
+                    return; // Salimos sin actualizar el TextBox
                 }
 
-                // Mostrar resultado
-                TboxPantalla.Text = $"{operando1} {SimboloOperador(operador)} {operando2} = {resultado}";
+                // Si todo está bien, mostramos la operación y el resultado
+                TboxPantalla.Text = $"{expresion}\r\n= {valor:0.################}";
+                resultadoMostrado = true;
                 nuevaEntrada = true;
+
+                TboxPantalla.Text = $"{expresion}\r\n= {Convert.ToDouble(resultado):0.################}";
+                resultadoMostrado = true;
+                nuevaEntrada = true;
+
+                //Mantener el curso a la derecha. 
+                TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+                TboxPantalla.SelectionLength = 0;
             }
             catch
             {
-                MostrarError();
+                MostrarError("Error en la expresión");
             }
         }
 
         //Boton de accion del punto decimal 
         private void BtnPuntoDecimal_Click(object sender, EventArgs e)
         {
-            string[] partes = TboxPantalla.Text.Split(new char[] { '+', '-', '×', '÷' }, StringSplitOptions.RemoveEmptyEntries);
-            string ultimoNumero = partes[partes.Length - 1].Trim(); // Tomamos el último número
+            string texto = TboxPantalla.Text;
 
-            // Si ya contiene un punto, no agregamos otro
-            if (!ultimoNumero.Contains("."))
+            // Si acabamos de mostrar un resultado, iniciamos un nuevo número
+            if (resultadoMostrado)
             {
-                if (nuevaEntrada || ultimoNumero == "")
-                {
-                    TboxPantalla.Text += "0."; // Si empieza nuevo número, agregamos 0.
-                    nuevaEntrada = false;
-                }
-                else {TboxPantalla.Text += ".";}
-
-                // Cursor al final
+                TboxPantalla.Text = "0.";
+                resultadoMostrado = false;
+                nuevaEntrada = false;
+                //Mantener el curso a la derecha. 
                 TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
                 TboxPantalla.SelectionLength = 0;
+                return;
             }
 
+            // Último número después del operador
+            string[] partes = texto.Split(new char[] { '+', '-', '×', '÷' }, StringSplitOptions.RemoveEmptyEntries);
+            string ultimo = partes.LastOrDefault()?.Trim() ?? "";
+
+            if (!ultimo.Contains("."))
+            {
+                if (nuevoNumero() || ultimo == "")
+                {
+                    TboxPantalla.Text += "0.";  // Anteponer cero si no hay número
+                }
+                else
+                {
+                    TboxPantalla.Text += ".";
+                }
+            }
+
+            //Mantener el curso a la derecha. 
+            TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+            TboxPantalla.SelectionLength = 0;
         }
+        
+        //Metodo de validar numero al inicio. 
+        private bool nuevoNumero()
+        {
+            return nuevaEntrada || TboxPantalla.Text.EndsWith("+") ||
+                   TboxPantalla.Text.EndsWith("-") ||
+                   TboxPantalla.Text.EndsWith("×") ||
+                   TboxPantalla.Text.EndsWith("÷") ||
+                   TboxPantalla.Text.Contains("\n"); // Si ya hay resultado, iniciar nuevo número
+        }
+
 
         // Metodo de agregar los numeros y mostrar en pantalla 
         private void BtnNumeros(object sender, EventArgs e)  //Evento que engloba a todos los numeros de la calculadora
         {
 
             Button btn = (Button)sender;
-            if (TboxPantalla.Text.Replace(" ", "").Length >= 12) return;
-            //Si la pantalla esta mostrando un error limpiamos
             if (error)
             {
                 TboxPantalla.Text = "0";
                 error = false;
             }
 
-            // Si el texto es "0" o acabamos de mostrar un resultado, reemplazamos
-            if (TboxPantalla.Text == "0" || nuevaEntrada)
+            // Tomar el número actual (después del último operador)
+            string texto = TboxPantalla.Text;
+            string[] operadores = new string[] { "+", "-", "×", "÷" };
+            int indiceUltOperador = texto.LastIndexOfAny(new char[] { '+', '-', '×', '÷' });
+
+            string numeroActual = indiceUltOperador >= 0 ? texto.Substring(indiceUltOperador + 1).Trim() : texto;
+
+            // Limitar a 12 dígitos, ignorando el punto decimal
+            if (numeroActual.Replace(".", "").Length >= 12)
+                return;
+
+            // Si la pantalla está mostrando 0 o venimos de un resultado
+            if (texto == "0" || nuevaEntrada)
             {
                 TboxPantalla.Text = btn.Text;
                 nuevaEntrada = false;
@@ -208,13 +261,16 @@ namespace CalculadoraBasica
             {
                 TboxPantalla.Text += btn.Text;
             }
-            // Colocar el cursor al final
+
+            resultadoMostrado = false;
+
+            //Mantener el curso a la derecha. 
             TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
             TboxPantalla.SelectionLength = 0;
         }
 
         //Metodo para controlar el manejo de impresion de errores
-        private void MostrarError(string mensaje = "Error")
+        private void MostrarError(string mensaje = "Error   ")
         {
             TboxPantalla.Text = mensaje;
             error = true;

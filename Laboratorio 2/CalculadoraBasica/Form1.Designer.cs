@@ -49,6 +49,7 @@
             BtnNum7 = new Button();
             BtnNum4 = new Button();
             BtnNum1 = new Button();
+            LlbResultado = new Label();
             PanelPrincipal.SuspendLayout();
             SuspendLayout();
             // 
@@ -56,7 +57,7 @@
             // 
             LblTitulo.AutoSize = true;
             LblTitulo.Font = new Font("Comic Sans MS", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            LblTitulo.Location = new Point(91, 19);
+            LblTitulo.Location = new Point(107, 19);
             LblTitulo.Name = "LblTitulo";
             LblTitulo.Size = new Size(183, 27);
             LblTitulo.TabIndex = 0;
@@ -65,11 +66,13 @@
             // 
             // TboxPantalla
             // 
-            TboxPantalla.Location = new Point(21, 58);
+            TboxPantalla.Location = new Point(21, 49);
             TboxPantalla.Multiline = true;
             TboxPantalla.Name = "TboxPantalla";
-            TboxPantalla.Size = new Size(338, 56);
+            TboxPantalla.ReadOnly = true;
+            TboxPantalla.Size = new Size(338, 71);
             TboxPantalla.TabIndex = 1;
+            TboxPantalla.TextAlign = HorizontalAlignment.Right;
             TboxPantalla.TextChanged += TboxPantalla_TextChanged;
             // 
             // BtnLimpiar
@@ -88,6 +91,7 @@
             // PanelPrincipal
             // 
             PanelPrincipal.BackColor = Color.LightGray;
+            PanelPrincipal.Controls.Add(LlbResultado);
             PanelPrincipal.Controls.Add(BtnPuntoDecimal);
             PanelPrincipal.Controls.Add(BtnMultiplicar);
             PanelPrincipal.Controls.Add(BtnResta);
@@ -316,6 +320,15 @@
             BtnNum1.UseVisualStyleBackColor = true;
             BtnNum1.Click += BtnNumeros;
             // 
+            // LlbResultado
+            // 
+            LlbResultado.AutoSize = true;
+            LlbResultado.Font = new Font("Arial Narrow", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            LlbResultado.Location = new Point(268, 100);
+            LlbResultado.Name = "LlbResultado";
+            LlbResultado.Size = new Size(0, 20);
+            LlbResultado.TabIndex = 20;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -352,5 +365,6 @@
         private Button BtnMultiplicar;
         private Button BtnResta;
         private Button BtnSuma;
+        private Label LlbResultado;
     }
 }
