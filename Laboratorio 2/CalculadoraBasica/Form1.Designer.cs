@@ -58,7 +58,7 @@
             // 
             LblTitulo.AutoSize = true;
             LblTitulo.Font = new Font("Comic Sans MS", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            LblTitulo.Location = new Point(91, 19);
+            LblTitulo.Location = new Point(107, 19);
             LblTitulo.Name = "LblTitulo";
             LblTitulo.Size = new Size(183, 27);
             LblTitulo.TabIndex = 0;
@@ -67,11 +67,13 @@
             // 
             // TboxPantalla
             // 
-            TboxPantalla.Location = new Point(21, 58);
+            TboxPantalla.Location = new Point(21, 49);
             TboxPantalla.Multiline = true;
             TboxPantalla.Name = "TboxPantalla";
-            TboxPantalla.Size = new Size(338, 56);
+            TboxPantalla.ReadOnly = true;
+            TboxPantalla.Size = new Size(338, 71);
             TboxPantalla.TabIndex = 1;
+            TboxPantalla.TextAlign = HorizontalAlignment.Right;
             TboxPantalla.TextChanged += TboxPantalla_TextChanged;
             // 
             // BtnLimpiar

@@ -17,9 +17,9 @@ namespace CalculadoraBasica
             InitializeComponent();
             TboxPantalla.Text = "0"; //Para que aparezca 0 por defecto
             TboxPantalla.ReadOnly = true; // No editable
-            TboxPantalla.Font = new Font("Segoe UI", 14); // Tamaño 14
+            TboxPantalla.Font = new Font("Segoe UI", 12); // Tamaño 14
             TboxPantalla.TextAlign = HorizontalAlignment.Right; // Opcional: alinear a la derecha
-
+            TboxPantalla.ScrollBars = ScrollBars.None;
             this.KeyPreview = true; //Permite capturar teclas
             this.KeyDown += teclas_Accion;
         }
@@ -28,8 +28,7 @@ namespace CalculadoraBasica
         private void BtnBorrar_Click(object sender, EventArgs e)
         {
 
-            // Si estamos en nuevaEntrada} dejamos 0
-            if (nuevaEntrada)
+            if (error)
             {
                 TboxPantalla.Text = "0";
                 nuevaEntrada = false;
@@ -40,10 +39,13 @@ namespace CalculadoraBasica
             if (TboxPantalla.Text.Length > 1) //Si el texto es mayor a 1 se borra una posicion 
             {
                 TboxPantalla.Text = TboxPantalla.Text.Substring(0, TboxPantalla.Text.Length - 1);
-            }
-            else
+            } else
             {
-                TboxPantalla.Text = "0"; //Sino se pone en 0 automticamente
+                TboxPantalla.Text = "0";
+
+                //Mantener el curso a la derecha. 
+                TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+                TboxPantalla.SelectionLength = 0;
             }
         }
 
@@ -271,6 +273,7 @@ namespace CalculadoraBasica
             TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
             TboxPantalla.SelectionLength = 0;
         }
+
 
 
         // Metodo de agregar los numeros y mostrar en pantalla 
