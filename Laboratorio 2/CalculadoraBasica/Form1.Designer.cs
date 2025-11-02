@@ -49,6 +49,8 @@
             BtnNum7 = new Button();
             BtnNum4 = new Button();
             BtnNum1 = new Button();
+            BtnParenIzq = new Button();
+            BtnParenDer = new Button();
             PanelPrincipal.SuspendLayout();
             SuspendLayout();
             // 
@@ -88,6 +90,8 @@
             // PanelPrincipal
             // 
             PanelPrincipal.BackColor = Color.LightGray;
+            PanelPrincipal.Controls.Add(BtnParenDer);
+            PanelPrincipal.Controls.Add(BtnParenIzq);
             PanelPrincipal.Controls.Add(BtnPuntoDecimal);
             PanelPrincipal.Controls.Add(BtnMultiplicar);
             PanelPrincipal.Controls.Add(BtnResta);
@@ -110,14 +114,14 @@
             PanelPrincipal.Controls.Add(TboxPantalla);
             PanelPrincipal.Location = new Point(0, 1);
             PanelPrincipal.Name = "PanelPrincipal";
-            PanelPrincipal.Size = new Size(377, 387);
+            PanelPrincipal.Size = new Size(400, 423);
             PanelPrincipal.TabIndex = 3;
             // 
             // BtnPuntoDecimal
             // 
             BtnPuntoDecimal.BackColor = Color.LightGray;
             BtnPuntoDecimal.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            BtnPuntoDecimal.Location = new Point(279, 320);
+            BtnPuntoDecimal.Location = new Point(107, 320);
             BtnPuntoDecimal.Name = "BtnPuntoDecimal";
             BtnPuntoDecimal.Size = new Size(80, 40);
             BtnPuntoDecimal.TabIndex = 19;
@@ -129,7 +133,7 @@
             // 
             BtnMultiplicar.BackColor = Color.Gold;
             BtnMultiplicar.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            BtnMultiplicar.Location = new Point(279, 136);
+            BtnMultiplicar.Location = new Point(279, 228);
             BtnMultiplicar.Name = "BtnMultiplicar";
             BtnMultiplicar.Size = new Size(80, 40);
             BtnMultiplicar.TabIndex = 18;
@@ -141,7 +145,7 @@
             // 
             BtnResta.BackColor = Color.Gold;
             BtnResta.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            BtnResta.Location = new Point(279, 182);
+            BtnResta.Location = new Point(279, 274);
             BtnResta.Name = "BtnResta";
             BtnResta.Size = new Size(80, 40);
             BtnResta.TabIndex = 17;
@@ -153,7 +157,7 @@
             // 
             BtnSuma.BackColor = Color.Gold;
             BtnSuma.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            BtnSuma.Location = new Point(279, 228);
+            BtnSuma.Location = new Point(279, 320);
             BtnSuma.Name = "BtnSuma";
             BtnSuma.Size = new Size(80, 40);
             BtnSuma.TabIndex = 16;
@@ -165,7 +169,7 @@
             // 
             BtnNum0.BackColor = Color.LightGray;
             BtnNum0.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            BtnNum0.Location = new Point(193, 320);
+            BtnNum0.Location = new Point(21, 320);
             BtnNum0.Name = "BtnNum0";
             BtnNum0.Size = new Size(80, 40);
             BtnNum0.TabIndex = 15;
@@ -201,7 +205,7 @@
             // 
             BtnDividir.BackColor = Color.Gold;
             BtnDividir.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            BtnDividir.Location = new Point(193, 136);
+            BtnDividir.Location = new Point(279, 182);
             BtnDividir.Name = "BtnDividir";
             BtnDividir.Size = new Size(80, 40);
             BtnDividir.TabIndex = 12;
@@ -272,9 +276,9 @@
             // BtnIgual
             // 
             BtnIgual.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            BtnIgual.Location = new Point(21, 320);
+            BtnIgual.Location = new Point(194, 320);
             BtnIgual.Name = "BtnIgual";
-            BtnIgual.Size = new Size(166, 40);
+            BtnIgual.Size = new Size(80, 40);
             BtnIgual.TabIndex = 6;
             BtnIgual.Text = "=";
             BtnIgual.UseVisualStyleBackColor = true;
@@ -316,11 +320,35 @@
             BtnNum1.UseVisualStyleBackColor = true;
             BtnNum1.Click += BtnNumeros;
             // 
+            // BtnParenIzq
+            // 
+            BtnParenIzq.BackColor = Color.Gold;
+            BtnParenIzq.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            BtnParenIzq.Location = new Point(193, 136);
+            BtnParenIzq.Name = "BtnParenIzq";
+            BtnParenIzq.Size = new Size(80, 40);
+            BtnParenIzq.TabIndex = 20;
+            BtnParenIzq.Text = "(";
+            BtnParenIzq.UseVisualStyleBackColor = false;
+            BtnParenIzq.Click += BtnParentesis;
+            // 
+            // BtnParenDer
+            // 
+            BtnParenDer.BackColor = Color.Gold;
+            BtnParenDer.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            BtnParenDer.Location = new Point(279, 136);
+            BtnParenDer.Name = "BtnParenDer";
+            BtnParenDer.Size = new Size(80, 40);
+            BtnParenDer.TabIndex = 21;
+            BtnParenDer.Text = ")";
+            BtnParenDer.UseVisualStyleBackColor = false;
+            BtnParenDer.Click += BtnParentesis;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(376, 385);
+            ClientSize = new Size(384, 408);
             Controls.Add(PanelPrincipal);
             Name = "Form1";
             Text = "Form1";
@@ -352,5 +380,7 @@
         private Button BtnMultiplicar;
         private Button BtnResta;
         private Button BtnSuma;
+        private Button BtnParenDer;
+        private Button BtnParenIzq;
     }
 }

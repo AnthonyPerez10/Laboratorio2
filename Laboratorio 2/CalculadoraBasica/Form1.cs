@@ -1,3 +1,7 @@
+using System.Text.RegularExpressions;
+using System.Linq;
+
+
 namespace CalculadoraBasica
 {
     public partial class Form1 : Form
@@ -5,7 +9,6 @@ namespace CalculadoraBasica
         //Declaracion de variables
         private bool nuevaEntrada = false;
         double operando1 = 0;
-        double operando2 = 0;
         string operador = "";
         bool error = false;
 
@@ -29,9 +32,10 @@ namespace CalculadoraBasica
             if (nuevaEntrada)
             {
                 TboxPantalla.Text = "0";
-                nuevaEntrada = true;
+                nuevaEntrada = false;
                 return;
             }
+
 
             if (TboxPantalla.Text.Length > 1) //Si el texto es mayor a 1 se borra una posicion 
             {
@@ -46,27 +50,47 @@ namespace CalculadoraBasica
         //Metodo para la funcion de seleccionar el operador 
         private void SeleccionarOperador(string op)
         {
-            try
+            if (error)
             {
-                operando1 = double.Parse(TboxPantalla.Text);
-                operador = op;
-
-                //Mostrar el operador en TextBox
-                switch (op)
-                {
-                    case "+": TboxPantalla.Text = operando1 + " +"; break;
-                    case "-": TboxPantalla.Text = operando1 + " -"; break;
-                    case "*": TboxPantalla.Text = operando1 + " ×"; break;
-                    case "/": TboxPantalla.Text = operando1 + " ÷"; break;
-                }
-
-                nuevaEntrada = false; 
+                TboxPantalla.Text = "0";
+                error = false;
             }
-            catch
+
+            // Si hay un "=", usar el resultado como base
+            if (TboxPantalla.Text.Contains("="))
+                TboxPantalla.Text = operando1.ToString();
+
+            // Si está vacío o "0" y no es "-", no permitas operador al inicio
+            if ((string.IsNullOrWhiteSpace(TboxPantalla.Text) || TboxPantalla.Text == "0")
+                && op != "-") return;
+
+            // Si termina en operador, reemplázalo
+            if (TboxPantalla.Text.EndsWith(" +") || TboxPantalla.Text.EndsWith(" -") ||
+                TboxPantalla.Text.EndsWith(" ×") || TboxPantalla.Text.EndsWith(" ÷") ||
+                TboxPantalla.Text.EndsWith("+") || TboxPantalla.Text.EndsWith("-") ||
+                TboxPantalla.Text.EndsWith("×") || TboxPantalla.Text.EndsWith("÷") ||
+                TboxPantalla.Text.EndsWith("(")) // evita poner op justo tras "("
             {
-                MostrarError();
+                if (TboxPantalla.Text.EndsWith("(") && op != "-")
+                    return; // permitimos "-" como unario después de "("
+                TboxPantalla.Text = TboxPantalla.Text.TrimEnd();
+                if (!TboxPantalla.Text.EndsWith("("))
+                    TboxPantalla.Text = TboxPantalla.Text.Substring(0, TboxPantalla.Text.Length - 1);
             }
+
+            switch (op)
+            {
+                case "+": TboxPantalla.Text += " +"; break;
+                case "-": TboxPantalla.Text += " -"; break;
+                case "*": TboxPantalla.Text += " ×"; break;
+                case "/": TboxPantalla.Text += " ÷"; break;
+            }
+
+            nuevaEntrada = false;
+            TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
         }
+
+
         private void LblTitulo_Click(object sender, EventArgs e)
         {
 
@@ -82,7 +106,10 @@ namespace CalculadoraBasica
         {
             //Se limpia todo
             TboxPantalla.Text = "0";
+            operando1 = 0;
+            operador = "";
             nuevaEntrada = false;
+            error = false;
         }
 
         // Boton de operador de divsion 
@@ -94,7 +121,7 @@ namespace CalculadoraBasica
         //Boton de operador de multiplicacion 
         private void BtnMultiplicar_Click(object sender, EventArgs e)
         {
-            SeleccionarOperador("*"); 
+            SeleccionarOperador("*");
         }
 
         private void BtnNum0_Click(object sender, EventArgs e)
@@ -119,96 +146,182 @@ namespace CalculadoraBasica
         {
             try
             {
-                // Extraer la parte después del operador (el segundo número)
-                string[] partes = TboxPantalla.Text.Split(new char[] { '+', '-', '×', '÷' },
-                    StringSplitOptions.RemoveEmptyEntries);
+                string expresion = TboxPantalla.Text.Trim();
 
-                if (partes.Length < 2)
+                // Si está vacío o termina en operador, no evaluamos
+                if (string.IsNullOrEmpty(expresion) ||
+                    expresion.EndsWith("+") || expresion.EndsWith("-") ||
+                    expresion.EndsWith("×") || expresion.EndsWith("÷"))
                 {
-                    return; // no hay operación completa
+                    MostrarError("Expresión incompleta");
+                    return;
                 }
 
-                operando1 = double.Parse(partes[0].Trim());
-                operando2 = double.Parse(partes[1].Trim());
+                // Reemplazar símbolos visuales por los que entiende C#
+                expresion = expresion.Replace("×", "*").Replace("÷", "/");
 
-                double resultado = 0;
+                // Eliminar espacios duplicados
+                expresion = System.Text.RegularExpressions.Regex.Replace(expresion, @"\s+", " ");
 
-                switch (operador)
+                // Insertar multiplicación explícita donde haya multiplicación implícita
+                expresion = Regex.Replace(expresion, @"(\d)\s*\(", "$1*(");
+                expresion = Regex.Replace(expresion, @"\)\s*(\d)", ")*$1");
+                expresion = Regex.Replace(expresion, @"\)\s*\(", ")*(");
+
+                // Validar que solo haya números, operadores y paréntesis
+                if (!System.Text.RegularExpressions.Regex.IsMatch(expresion, @"^[0-9+\-*/(). ]+$"))
                 {
-                    case "+": resultado = operando1 + operando2;
-                        resultado = Math.Round(resultado, 3); break; //Suma 
-                    case "-": resultado = operando1 - operando2;
-                        resultado = Math.Round(resultado, 3); break; //Resta
-                    case "*": resultado = operando1 * operando2;
-                        resultado = Math.Round(resultado, 3); break; //Multiplicacion
-                    case "/":  //Division 
-                        if (operando2 == 0)  // Verificando el divissor no sea 0 
-                        {
-                            MostrarError("División por cero");
-                            return;
-                        }
-                        resultado = operando1 / operando2;
-                        resultado = Math.Round(resultado, 3); //Reduciendo la divison a 3 decimales
-                        break;
+                    MostrarError("Entrada no válida");
+                    return;
                 }
 
-                // Mostrar resultado
-                TboxPantalla.Text = $"{operando1} {SimboloOperador(operador)} {operando2} = {resultado}";
-                nuevaEntrada = true;
+                // Validar paréntesis balanceados
+                int abiertos = expresion.Count(c => c == '(');
+                int cerrados = expresion.Count(c => c == ')');
+                if (abiertos != cerrados)
+                {
+                    MostrarError("Paréntesis desbalanceados");
+                    return;
+                }
+
+                // Evaluar la expresión completa usando DataTable.Compute
+                using (System.Data.DataTable dt = new System.Data.DataTable())
+                {
+                    object resultadoObj = dt.Compute(expresion, "");
+                    double resultado = Math.Round(Convert.ToDouble(resultadoObj), 3);
+
+                    // Verificar resultados inválidos
+                    if (double.IsInfinity(resultado) || double.IsNaN(resultado))
+                    {
+                        MostrarError("Resultado indefinido");
+                        return;
+                    }
+
+                    // Mostrar resultado final en el display
+                    TboxPantalla.Text = $"{TboxPantalla.Text} = {resultado}";
+
+                    // Guardar resultado para continuar operando con él
+                    operando1 = resultado;
+                    operador = "";
+                    nuevaEntrada = true;
+                }
             }
-            catch
+            catch (Exception)
             {
-                MostrarError();
+                MostrarError("Expresión inválida");
             }
         }
 
         //Boton de accion del punto decimal 
         private void BtnPuntoDecimal_Click(object sender, EventArgs e)
         {
-            string[] partes = TboxPantalla.Text.Split(new char[] { '+', '-', '×', '÷' }, StringSplitOptions.RemoveEmptyEntries);
-            string ultimoNumero = partes[partes.Length - 1].Trim(); // Tomamos el último número
-
-            // Si ya contiene un punto, no agregamos otro
-            if (!ultimoNumero.Contains("."))
-            {
-                if (nuevaEntrada || ultimoNumero == "")
-                {
-                    TboxPantalla.Text += "0."; // Si empieza nuevo número, agregamos 0.
-                    nuevaEntrada = false;
-                }
-                else {TboxPantalla.Text += ".";}
-
-                // Cursor al final
-                TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
-                TboxPantalla.SelectionLength = 0;
-            }
-
-        }
-
-        // Metodo de agregar los numeros y mostrar en pantalla 
-        private void BtnNumeros(object sender, EventArgs e)  //Evento que engloba a todos los numeros de la calculadora
-        {
-
-            Button btn = (Button)sender;
-            if (TboxPantalla.Text.Replace(" ", "").Length >= 12) return;
-            //Si la pantalla esta mostrando un error limpiamos
+            // Si hay error, reiniciar
             if (error)
             {
                 TboxPantalla.Text = "0";
                 error = false;
             }
 
-            // Si el texto es "0" o acabamos de mostrar un resultado, reemplazamos
-            if (TboxPantalla.Text == "0" || nuevaEntrada)
+            // Si venimos de un resultado anterior (=), reiniciar
+            if (TboxPantalla.Text.Contains("="))
             {
-                TboxPantalla.Text = btn.Text;
+                TboxPantalla.Text = "0";
+                operando1 = 0;
+                operador = "";
+                nuevaEntrada = false;
+            }
+
+            // Si solo hay "0" en pantalla, lo borramos antes de escribir el punto
+            if (TboxPantalla.Text == "0")
+                TboxPantalla.Text = "";
+
+            //Último carácter visible (ignora espacios)
+            char last = '\0';
+            for (int i = TboxPantalla.Text.Length - 1; i >= 0; i--)
+                if (!char.IsWhiteSpace(TboxPantalla.Text[i])) { last = TboxPantalla.Text[i]; break; }
+
+            // Si el último carácter es ')', agregar multiplicación implícita
+            if (last == ')')
+            {
+                TboxPantalla.Text += " × 0.";
+                TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+                TboxPantalla.SelectionLength = 0;
+                return;
+            }
+
+            // Dividir texto para validar último número
+            string[] partes = TboxPantalla.Text.Split(new char[] { '+', '-', '×', '÷' }, StringSplitOptions.RemoveEmptyEntries);
+            string ultimoNumero = partes.Length > 0 ? partes[partes.Length - 1].Trim() : "";
+
+            // Si ya contiene un punto, no agregar otro
+            if (ultimoNumero.Contains(".")) return;
+
+            //Si empieza nueva entrada o está vacío, agregar "0."
+            if (nuevaEntrada || string.IsNullOrWhiteSpace(ultimoNumero))
+            {
+                TboxPantalla.Text += "0.";
                 nuevaEntrada = false;
             }
             else
             {
-                TboxPantalla.Text += btn.Text;
+                TboxPantalla.Text += ".";
             }
+
             // Colocar el cursor al final
+            TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+            TboxPantalla.SelectionLength = 0;
+        }
+
+
+        // Metodo de agregar los numeros y mostrar en pantalla 
+        private void BtnNumeros(object sender, EventArgs e)  //Evento que engloba a todos los numeros de la calculadora
+        {
+            Button btn = (Button)sender;
+            if (TboxPantalla.Text.Replace(" ", "").Length >= 20) return;
+
+            // Si venimos de un resultado con "=", reiniciar todo
+            if (TboxPantalla.Text.Contains("="))
+            {
+                TboxPantalla.Text = "0";
+                operando1 = 0;
+                operador = "";
+                nuevaEntrada = false;
+                error = false;
+            }
+
+            if (error)
+            {
+                TboxPantalla.Text = "0";
+                error = false;
+            }
+
+            // Quitar 0 inicial
+            if (TboxPantalla.Text == "0")
+                TboxPantalla.Text = "";
+
+            // Si el último es ')', insertar "×" antes del número
+            char last = '\0';
+            for (int i = TboxPantalla.Text.Length - 1; i >= 0; i--)
+                if (!char.IsWhiteSpace(TboxPantalla.Text[i])) { last = TboxPantalla.Text[i]; break; }
+
+            if (last == ')')
+            {
+                TboxPantalla.Text += " × " + btn.Text;
+                TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+                TboxPantalla.SelectionLength = 0;
+                return;
+            }
+
+            if (nuevaEntrada)
+            {
+                TboxPantalla.Text = btn.Text; // empieza nuevo número
+                nuevaEntrada = false;
+            }
+            else
+            {
+                TboxPantalla.Text += btn.Text; // continúa expresión
+            }
+
             TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
             TboxPantalla.SelectionLength = 0;
         }
@@ -218,7 +331,9 @@ namespace CalculadoraBasica
         {
             TboxPantalla.Text = mensaje;
             error = true;
-            nuevaEntrada = true; 
+            nuevaEntrada = true;
+            operando1 = 0;
+            operador = "";
         }
 
         // Función auxiliar para mostrar el símbolo correcto en el TextBox
@@ -279,5 +394,81 @@ namespace CalculadoraBasica
 
             e.SuppressKeyPress = true; // Evita sonido de alerta del sistema
         }
+
+        private void BtnParentesis(object sender, EventArgs e)
+        {
+
+            Button btn = (Button)sender;
+            string simbolo = btn.Text;
+
+            if (TboxPantalla.Text.Replace(" ", "").Length >= 25) return;
+
+            // Si hay error, reiniciar
+            if (error)
+            {
+                TboxPantalla.Text = simbolo;
+                error = false;
+                nuevaEntrada = false;
+                return;
+            }
+
+            // Si venimos de un resultado anterior (=), reiniciar si abrimos "("
+            if (TboxPantalla.Text.Contains("="))
+            {
+                if (simbolo == "(")
+                {
+                    TboxPantalla.Text = "(";
+                    nuevaEntrada = false;
+                    return;
+                }
+                else
+                {
+                    MostrarError("Expresión no válida después de resultado");
+                    return;
+                }
+            }
+
+            // Si el display tiene solo "0", borrar antes del primer "("
+            if (TboxPantalla.Text == "0")
+                TboxPantalla.Text = "";
+
+            // Detectar último carácter visible (no espacio)
+            char last = '\0';
+            for (int i = TboxPantalla.Text.Length - 1; i >= 0; i--)
+                if (!char.IsWhiteSpace(TboxPantalla.Text[i])) { last = TboxPantalla.Text[i]; break; }
+
+            // Si es paréntesis de apertura "("
+            if (simbolo == "(")
+            {
+                // Si viene después de número, ".", o ")", agregar multiplicación implícita
+                if (char.IsDigit(last) || last == ')' || last == '.')
+                    TboxPantalla.Text += " × (";
+                else
+                    TboxPantalla.Text += "(";
+            }
+            // Si es paréntesis de cierre ")"
+            else if (simbolo == ")")
+            {
+                int abiertos = TboxPantalla.Text.Count(c => c == '(');
+                int cerrados = TboxPantalla.Text.Count(c => c == ')');
+
+                if (abiertos > cerrados)
+                {
+                    // Evita cerrar justo después de un operador o un "("
+                    if (last != '+' && last != '-' && last != '×' && last != '÷' && last != '(')
+                        TboxPantalla.Text += ")";
+                }
+                else
+                {
+                    MostrarError("Falta '(' antes de ')'");
+                    return;
+                }
+            }
+
+            // Cursor al final
+            TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+        }
+
+
     }
 }
