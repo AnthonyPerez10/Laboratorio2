@@ -47,6 +47,10 @@ namespace CalculadoraBasica
                 TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
                 TboxPantalla.SelectionLength = 0;
             }
+
+            // Colocar el cursor al final
+            TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+            TboxPantalla.SelectionLength = 0;
         }
 
         //Metodo para la funcion de seleccionar el operador 
@@ -89,7 +93,10 @@ namespace CalculadoraBasica
             }
 
             nuevaEntrada = false;
+
+            // Colocar el cursor al final
             TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+            TboxPantalla.SelectionLength = 0;
         }
 
 
@@ -207,6 +214,10 @@ namespace CalculadoraBasica
                     operador = "";
                     nuevaEntrada = true;
                 }
+
+                // Colocar el cursor al final
+                TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+                TboxPantalla.SelectionLength = 0;
             }
             catch (Exception)
             {
@@ -217,27 +228,36 @@ namespace CalculadoraBasica
         //Boton de accion del punto decimal 
         private void BtnPuntoDecimal_Click(object sender, EventArgs e)
         {
-            // Si hay error, reiniciar
             if (error)
             {
                 TboxPantalla.Text = "0";
                 error = false;
             }
 
-            // Si venimos de un resultado anterior (=), reiniciar
+            // Si venimos de un resultado anterior (=), permitir continuar la operación
             if (TboxPantalla.Text.Contains("="))
             {
-                TboxPantalla.Text = "0";
+                // Tomamos solo el resultado numérico para continuar desde ahí
+                string[] partes = TboxPantalla.Text.Split('=');
+                if (partes.Length > 1)
+                {
+                    string resultadoStr = partes[1].Trim();
+                    TboxPantalla.Text = resultadoStr; // dejamos el resultado en pantalla
+                }
+                else
+                {
+                    TboxPantalla.Text = "0";
+                }
+
                 operando1 = 0;
                 operador = "";
                 nuevaEntrada = false;
             }
 
-            // Si solo hay "0" en pantalla, lo borramos antes de escribir el punto
             if (TboxPantalla.Text == "0")
                 TboxPantalla.Text = "";
 
-            //Último carácter visible (ignora espacios)
+            // Último carácter visible (ignora espacios)
             char last = '\0';
             for (int i = TboxPantalla.Text.Length - 1; i >= 0; i--)
                 if (!char.IsWhiteSpace(TboxPantalla.Text[i])) { last = TboxPantalla.Text[i]; break; }
@@ -251,17 +271,23 @@ namespace CalculadoraBasica
                 return;
             }
 
-            // Dividir texto para validar último número
-            string[] partes = TboxPantalla.Text.Split(new char[] { '+', '-', '×', '÷' }, StringSplitOptions.RemoveEmptyEntries);
-            string ultimoNumero = partes.Length > 0 ? partes[partes.Length - 1].Trim() : "";
+            // Obtener último número (dividir por operadores)
+            string[] partesNum = TboxPantalla.Text.Split(new char[] { '+', '-', '×', '÷' }, StringSplitOptions.RemoveEmptyEntries);
+            string ultimoNumero = partesNum.Length > 0 ? partesNum[partesNum.Length - 1].Trim() : "";
 
             // Si ya contiene un punto, no agregar otro
             if (ultimoNumero.Contains(".")) return;
 
-            //Si empieza nueva entrada o está vacío, agregar "0."
-            if (nuevaEntrada || string.IsNullOrWhiteSpace(ultimoNumero))
+            // Si está vacío, nueva entrada o termina en operador, agregar 0.
+            if (string.IsNullOrWhiteSpace(ultimoNumero) ||
+                last == '+' || last == '-' || last == '×' || last == '÷' ||
+                nuevaEntrada)
             {
-                TboxPantalla.Text += "0.";
+                if (TboxPantalla.Text.EndsWith(" "))
+                    TboxPantalla.Text += "0.";
+                else
+                    TboxPantalla.Text += " 0.";
+
                 nuevaEntrada = false;
             }
             else
@@ -280,7 +306,7 @@ namespace CalculadoraBasica
         private void BtnNumeros(object sender, EventArgs e)  //Evento que engloba a todos los numeros de la calculadora
         {
             Button btn = (Button)sender;
-            if (TboxPantalla.Text.Replace(" ", "").Length >= 20) return;
+            if (TboxPantalla.Text.Replace(" ", "").Length >= 70) return;
 
             // Si venimos de un resultado con "=", reiniciar todo
             if (TboxPantalla.Text.Contains("="))
@@ -324,7 +350,7 @@ namespace CalculadoraBasica
             {
                 TboxPantalla.Text += btn.Text; // continúa expresión
             }
-
+            // Colocar el cursor al final
             TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
             TboxPantalla.SelectionLength = 0;
         }
@@ -404,7 +430,7 @@ namespace CalculadoraBasica
             Button btn = (Button)sender;
             string simbolo = btn.Text;
 
-            if (TboxPantalla.Text.Replace(" ", "").Length >= 25) return;
+            if (TboxPantalla.Text.Replace(" ", "").Length >= 75) return;
 
             // Si hay error, reiniciar
             if (error)
@@ -468,8 +494,9 @@ namespace CalculadoraBasica
                 }
             }
 
-            // Cursor al final
+            // Colocar el cursor al final
             TboxPantalla.SelectionStart = TboxPantalla.Text.Length;
+            TboxPantalla.SelectionLength = 0;
         }
 
 
